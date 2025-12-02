@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
-// MOCK APPLICATIONS (simulated JOIN data)
-// ---------------------------
+
 const mockApplications = [
   { id: 1, company_name: "Google", position_title: "SWE Intern" },
   { id: 2, company_name: "Amazon", position_title: "Data Analyst Intern" },
 ];
-// MOCK INTERVIEW DATA
-// ---------------------------
+
 let mockInterviews = [
   {
     id: 1,
@@ -17,76 +15,63 @@ let mockInterviews = [
   },
 ];
 
-let nextId = 2;
-// GET ALL INTERVIEWS (WITH JOIN)
-// ---------------------------
-export async function GET() {
-  try {
-    const joined = mockInterviews.map((i) => {
-      const app = mockApplications.find((a) => a.id === i.application_id);
+// GET /api/interviews/:id
+export async function GET(request, { params }) {
+  const id = Number(params.id);
 
-      return {
-        ...i,
-        application: app || null,
-      };
-    });
-
-    return NextResponse.json(joined);
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Server error" },
-      { status: 500 }
-    );
+  const interview = mockInterviews.find(i => i.id === id);
+  if (!interview) {
+    return NextResponse.json({ error: "Interview not found" }, { status: 404 });
   }
+
+  const app = mockApplications.find(a => a.id === interview.application_id);
+
+  return NextResponse.json({ ...interview, application: app || null });
 }
-// POST NEW INTERVIEW
-// ---------------------------
-export async function POST(request) {
-  try {
-    const body = await request.json();
-    const { application_id, date, location } = body;
 
-    // Required fields
-    if (!application_id || !date || !location) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
-    }
+// PUT /api/interviews/:id
+export async function PUT(request, { params }) {
+  const id = Number(params.id);
+  const body = await request.json();
 
-    // Validate application exists
-    const appExists = mockApplications.some((a) => a.id === application_id);
-    if (!appExists) {
-      return NextResponse.json(
-        { error: "Application does not exist" },
-        { status: 400 }
-      );
-    }
-
-    // Validate future date
-    const interviewDate = new Date(date);
-    if (interviewDate < new Date()) {
-      return NextResponse.json(
-        { error: "Interview date must be in the future" },
-        { status: 400 }
-      );
-    }
-
-    const newInterview = {
-      id: nextId++,
-      application_id,
-      date,
-      location,
-      completed: false,
-    };
-
-    mockInterviews.push(newInterview);
-
-    return NextResponse.json(newInterview, { status: 201 });
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Server error" },
-      { status: 500 }
-    );
+  let interview = mockInterviews.find(i => i.id === id);
+  if (!interview) {
+    return NextResponse.json({ error: "Interview not found" }, { status: 404 });
   }
+
+  interview = { ...interview, ...body };
+
+  mockInterviews = mockInterviews.map(i => (i.id === id ? interview : i));
+
+  return NextResponse.json({ message: "Interview updated", interview });
+}
+
+// PATCH /api/interviews/:id
+export async function PATCH(request, { params }) {
+  const id = Number(params.id);
+
+  let interview = mockInterviews.find(i => i.id === id);
+  if (!interview) {
+    return NextResponse.json({ error: "Interview not found" }, { status: 404 });
+  }
+
+  interview.completed = true;
+
+  mockInterviews = mockInterviews.map(i => (i.id === id ? interview : i));
+
+  return NextResponse.json({ message: "Interview marked as completed", interview });
+}
+
+// DELETE /api/interviews/:id
+export async function DELETE(request, { params }) {
+  const id = Number(params.id);
+
+  let exists = mockInterviews.some(i => i.id === id);
+  if (!exists) {
+    return NextResponse.json({ error: "Interview not found" }, { status: 404 });
+  }
+
+  mockInterviews = mockInterviews.filter(i => i.id !== id);
+
+  return NextResponse.json({ message: "Interview deleted" });
 }

@@ -89,4 +89,19 @@ export async function POST(request) {
       { status: 500 }
     );
   }
+}//DELETE
+export async function DELETE(request, { params }) {
+  const id = Number(params.id);
+
+  let interview = mockInterviews.find(i => i.id === id);
+  if (!interview) {
+    return NextResponse.json(
+      { error: "Interview not found" },
+      { status: 404 }
+    );
+  }
+
+  mockInterviews = mockInterviews.filter(i => i.id !== id);
+
+  return NextResponse.json({ message: "Interview deleted" });
 }

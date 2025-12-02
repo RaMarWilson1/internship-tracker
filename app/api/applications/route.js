@@ -1,7 +1,7 @@
 //*** RaMar Wilson
 //*** Database Systems - Final Project
-//*** November 4, 2024
-//*** Applications API Route - Handles GET and POST for applications
+//*** November 13, 2024
+//*** Applications API Route
 
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
@@ -17,7 +17,7 @@ export async function GET(request) {
   } catch (error) {
     console.error('Database error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch applications' },
+      { error: 'Failed to fetch applications', details: error.message },
       { status: 500 }
     );
   }
@@ -38,10 +38,9 @@ export async function POST(request) {
       notes 
     } = body;
     
-    // Validate required fields
     if (!company_name || !position_title || !application_date) {
       return NextResponse.json(
-        { error: 'Missing required fields: company_name, position_title, application_date' },
+        { error: 'Missing required fields' },
         { status: 400 }
       );
     }
@@ -60,17 +59,8 @@ export async function POST(request) {
     
   } catch (error) {
     console.error('Database error:', error);
-    
-    // Handle duplicate entry error
-    if (error.code === 'ER_DUP_ENTRY') {
-      return NextResponse.json(
-        { error: 'You have already applied to this position at this company' },
-        { status: 409 }
-      );
-    }
-    
     return NextResponse.json(
-      { error: 'Failed to add application' },
+      { error: 'Failed to add application', details: error.message },
       { status: 500 }
     );
   }

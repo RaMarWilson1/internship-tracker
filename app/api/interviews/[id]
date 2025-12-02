@@ -1,0 +1,107 @@
+// @ts-nocheck
+import { NextResponse } from "next/server";
+
+
+// Re-use mock data from parent file:
+const mockApplications = [
+  { id: 1, company_name: "Google", position_title: "SWE Intern" },
+  { id: 2, company_name: "Amazon", position_title: "Data Analyst Intern" },
+];
+
+let mockInterviews = [
+  {
+    id: 1,
+    application_id: 1,
+    date: "2025-06-01",
+    location: "Virtual",
+    completed: false,
+  },
+];
+
+// ---------------------------
+// GET SINGLE INTERVIEW
+// ---------------------------
+export async function GET(request, { params }) {
+  const id = Number(params.id);
+
+  const interview = mockInterviews.find((i) => i.id === id);
+
+  if (!interview) {
+    return NextResponse.json(
+      { error: "Interview not found" },
+      { status: 404 }
+    );
+  }
+
+  // Add JOIN info
+  const app = mockApplications.find((a) => a.id === interview.application_id);
+
+  return NextResponse.json({ ...interview, application: app || null });
+}
+
+// ---------------------------
+// UPDATE INTERVIEW
+// ---------------------------
+export async function PUT(request, { params }) {
+  const id = Number(params.id);
+  const body = await request.json();
+
+  let interview = mockInterviews.find((i) => i.id === id);
+
+  if (!interview) {
+    return NextResponse.json(
+      { error: "Interview not found" },
+      { status: 404 }
+    );
+  }
+
+  // Validate required fields
+  if (!body.date || !body.location) {
+    return NextResponse.json(
+      { error: "Missing required fields" },
+      { status: 400 }
+    );
+  }
+
+  // Validate new date is future
+  if (new Date(body.date) < new Date()) {
+    return NextResponse.json(
+      { error: "Interview date must be in the future" },
+      { status: 400 }
+    );
+  }
+
+  interview = { ...interview, ...body };
+
+  // Update array
+  mockInterviews = mockInterviews.map((i) =>
+    i.id === id ? interview : i
+  );
+
+  return NextResponse.json({ message: "Interview updated", interview });
+}
+
+// MARK AS COMPLETED -----------------------------------
+export async function PATCH(request, { params }) {
+  const id = Number(params.id);
+
+  let interview = mockInterviews.find(i => i.id === id);
+  if (!interview) {
+    return NextResponse.json(
+      { error: "Interview not found" },
+      { status: 404 }
+    );
+  }
+
+  interview.completed = true;
+
+  // Update array
+  mockInterviews = mockInterviews.map(i =>
+    i.id === id ? interview : i
+  );
+
+  return NextResponse.json({
+    message: "Interview marked as completed",
+    interview,
+  });
+}

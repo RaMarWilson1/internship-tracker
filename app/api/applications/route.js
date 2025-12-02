@@ -1,7 +1,7 @@
 //*** RaMar Wilson
 //*** Database Systems - Final Project
-//*** November 13, 2024
-//*** Applications API Route
+//*** December 2, 2024
+//*** Applications API Route - GET all and POST new application
 
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
@@ -10,7 +10,8 @@ import pool from '@/lib/db';
 export async function GET(request) {
   try {
     const [rows] = await pool.query(
-      'SELECT * FROM Applications ORDER BY application_date DESC'
+      `SELECT * FROM Applications 
+       ORDER BY application_date DESC`
     );
     
     return NextResponse.json(rows);
@@ -28,33 +29,48 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const { 
+      user_id,
       company_name, 
       position_title, 
-      application_date, 
-      status,
+      job_description,
       location,
       salary_range,
+      application_status,
+      application_date,
       job_url,
-      notes 
+      notes
     } = body;
     
-    if (!company_name || !position_title || !application_date) {
+    // Validate required fields
+    if (!user_id || !company_name || !position_title || !application_date) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: user_id, company_name, position_title, application_date' },
         { status: 400 }
       );
     }
     
     const [result] = await pool.query(
       `INSERT INTO Applications 
-       (user_id, company_name, position_title, application_date, status, location, salary_range, job_url, notes) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [1, company_name, position_title, application_date, status || 'Applied', location, salary_range, job_url, notes]
+       (user_id, company_name, position_title, job_description, location, salary_range, 
+        application_status, application_date, job_url, notes) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        user_id,
+        company_name, 
+        position_title, 
+        job_description || null,
+        location || null,
+        salary_range || null,
+        application_status || 'Applied',
+        application_date,
+        job_url || null,
+        notes || null
+      ]
     );
     
     return NextResponse.json({
       message: 'Application added successfully',
-      id: result.insertId
+      application_id: result.insertId
     }, { status: 201 });
     
   } catch (error) {

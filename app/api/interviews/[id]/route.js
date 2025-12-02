@@ -1,77 +1,127 @@
-import { NextResponse } from "next/server";
+//*** Sid
+//*** Database Systems - Final Project
+//*** December 2, 2024
+//*** Single Interview API - GET, PUT, DELETE by ID
 
-const mockApplications = [
-  { id: 1, company_name: "Google", position_title: "SWE Intern" },
-  { id: 2, company_name: "Amazon", position_title: "Data Analyst Intern" },
-];
+import { NextResponse } from 'next/server';
+import pool from '@/lib/db';
 
-let mockInterviews = [
-  {
-    id: 1,
-    application_id: 1,
-    date: "2025-06-01",
-    location: "Virtual",
-    completed: false,
-  },
-];
-
-// GET /api/interviews/:id
+// GET single interview by ID
 export async function GET(request, { params }) {
-  const id = Number(params.id);
-
-  const interview = mockInterviews.find(i => i.id === id);
-  if (!interview) {
-    return NextResponse.json({ error: "Interview not found" }, { status: 404 });
+  try {
+    const { id } = params;
+    
+    const [rows] = await pool.query(
+      `SELECT 
+        i.*,
+        a.company_name,
+        a.position_title
+       FROM Interviews i
+       JOIN Applications a ON i.application_id = a.application_id
+       WHERE i.interview_id = ?`,
+      [id]
+    );
+    
+    if (rows.length === 0) {
+      return NextResponse.json(
+        { error: 'Interview not found' },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json(rows[0]);
+  } catch (error) {
+    console.error('Database error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch interview' },
+      { status: 500 }
+    );
   }
-
-  const app = mockApplications.find(a => a.id === interview.application_id);
-
-  return NextResponse.json({ ...interview, application: app || null });
 }
 
-// PUT /api/interviews/:id
+// PUT update interview by ID
 export async function PUT(request, { params }) {
-  const id = Number(params.id);
-  const body = await request.json();
-
-  let interview = mockInterviews.find(i => i.id === id);
-  if (!interview) {
-    return NextResponse.json({ error: "Interview not found" }, { status: 404 });
+  try {
+    const { id } = params;
+    const body = await request.json();
+    const {
+      interview_type,
+      interview_date,
+      location,
+      interviewer_name,
+      interviewer_email,
+      notes,
+      outcome
+    } = body;
+    
+    const [result] = await pool.query(
+      `UPDATE Interviews SET 
+       interview_type = ?,
+       interview_date = ?,
+       location = ?,
+       interviewer_name = ?,
+       interviewer_email = ?,
+       notes = ?,
+       outcome = ?
+       WHERE interview_id = ?`,
+      [
+        interview_type,
+        interview_date,
+        location,
+        interviewer_name,
+        interviewer_email,
+        notes,
+        outcome,
+        id
+      ]
+    );
+    
+    if (result.affectedRows === 0) {
+      return NextResponse.json(
+        { error: 'Interview not found' },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json({ 
+      message: 'Interview updated successfully' 
+    });
+    
+  } catch (error) {
+    console.error('Database error:', error);
+    return NextResponse.json(
+      { error: 'Failed to update interview' },
+      { status: 500 }
+    );
   }
-
-  interview = { ...interview, ...body };
-
-  mockInterviews = mockInterviews.map(i => (i.id === id ? interview : i));
-
-  return NextResponse.json({ message: "Interview updated", interview });
 }
 
-// PATCH /api/interviews/:id
-export async function PATCH(request, { params }) {
-  const id = Number(params.id);
-
-  let interview = mockInterviews.find(i => i.id === id);
-  if (!interview) {
-    return NextResponse.json({ error: "Interview not found" }, { status: 404 });
-  }
-
-  interview.completed = true;
-
-  mockInterviews = mockInterviews.map(i => (i.id === id ? interview : i));
-
-  return NextResponse.json({ message: "Interview marked as completed", interview });
-}
-
-// DELETE /api/interviews/:id
+// DELETE interview by ID
 export async function DELETE(request, { params }) {
-  const id = Number(params.id);
-
-  let exists = mockInterviews.some(i => i.id === id);
-  if (!exists) {
-    return NextResponse.json({ error: "Interview not found" }, { status: 404 });
+  try {
+    const { id } = params;
+    
+    const [result] = await pool.query(
+      'DELETE FROM Interviews WHERE interview_id = ?',
+      [id]
+    );
+    
+    if (result.affectedRows === 0) {
+      return NextResponse.json(
+        { error: 'Interview not found' },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json({ 
+      message: 'Interview deleted successfully' 
+    });
+    
+  } catch (error) {
+    console.error('Database error:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete interview' },
+      { status: 500 }
+    );
   }
-
-  mockInterviews = mockInterviews.filter(i => i.id !== id);
-
-  return NextResponse.json({ message: "Interview deleted" });
 }

@@ -1,6 +1,6 @@
 //*** RaMar Wilson
 //*** Database Systems - Final Project
-//*** November 4, 2024
+//*** December 2, 2024
 //*** NextAuth configuration for user authentication
 
 import NextAuth from "next-auth";
@@ -8,7 +8,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import pool from '@/lib/db';
 import bcrypt from 'bcryptjs';
 
-const authOptions = {
+export const authOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -18,6 +18,10 @@ const authOptions = {
       },
       async authorize(credentials) {
         try {
+          if (!credentials?.email || !credentials?.password) {
+            return null;
+          }
+
           // Find user in database
           const [users] = await pool.query(
             'SELECT * FROM Users WHERE email = ?',
@@ -30,16 +34,21 @@ const authOptions = {
 
           const user = users[0];
 
-          // Check password (for now, simple comparison - we'll add bcrypt later)
-          if (credentials.password === user.password_hash) {
-            return {
-              id: user.user_id,
-              email: user.email,
-              name: `${user.first_name} ${user.last_name}`,
-            };
+          // Check password
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password_hash
+          );
+
+          if (!isPasswordValid) {
+            return null;
           }
 
-          return null;
+          return {
+            id: user.user_id.toString(),
+            email: user.email,
+            name: `${user.first_name} ${user.last_name}`,
+          };
         } catch (error) {
           console.error('Auth error:', error);
           return null;
@@ -49,6 +58,7 @@ const authOptions = {
   ],
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
     signIn: '/login',
@@ -57,16 +67,21 @@ const authOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
       }
       return token;
     },
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id;
+        session.user.email = token.email;
+        session.user.name = token.name;
       }
       return session;
     }
-  }
+  },
+  secret: process.env.NEXTAUTH_SECRET,
 };
 
 const handler = NextAuth(authOptions);

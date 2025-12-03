@@ -9,8 +9,8 @@ import { cookies } from 'next/headers';
 
 export async function POST(request) {
   try {
-    // Get token from cookie (set by callback)
-    const cookieStore = cookies();
+    // Get token from cookie (set by callback) - await in Next.js 15
+    const cookieStore = await cookies();
     const accessToken = cookieStore.get('gmail_token')?.value;
 
     if (!accessToken) {

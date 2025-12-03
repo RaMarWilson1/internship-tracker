@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -18,6 +18,21 @@ export default function EmailPage() {
   const [selectedApps, setSelectedApps] = useState([]);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Check if we just connected via OAuth callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('connected') === 'true') {
+      setConnected(true);
+      setSuccessMessage('Gmail connected successfully!');
+      // Clean up URL
+      window.history.replaceState({}, '', '/email');
+    }
+    if (params.get('error')) {
+      setError('Failed to connect Gmail. Please try again.');
+      window.history.replaceState({}, '', '/email');
+    }
+  }, []);
 
   const handleConnectGmail = async () => {
     try {
@@ -42,12 +57,11 @@ export default function EmailPage() {
       setScanning(true);
       setError('');
       
-      const token = sessionStorage.getItem('gmail_token') || 'demo_token';
-      
+      // Try to get token from cookie (set by callback)
       const res = await fetch('/api/email/parse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessToken: token })
+        credentials: 'include' // Include cookies
       });
       
       const data = await res.json();
@@ -109,21 +123,6 @@ export default function EmailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Import from Gmail</h1>
-              <p className="text-gray-600 mt-1">Automatically import applications from your email</p>
-            </div>
-            <Link href="/" className="text-blue-600 hover:text-blue-700">
-              ← Back to Dashboard
-            </Link>
-          </div>
-        </div>
-      </header>
-
-
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {successMessage && (
           <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
@@ -216,7 +215,7 @@ export default function EmailPage() {
           <div className="bg-white rounded-xl shadow-md p-8 border border-gray-200 text-center">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Gmail Connected! ✓</h3>
             <p className="text-gray-600 mb-6">
-              Now lets scan your recent emails for application confirmations
+              Now let's scan your recent emails for application confirmations
             </p>
             
             <button

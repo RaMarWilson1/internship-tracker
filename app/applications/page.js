@@ -75,28 +75,28 @@ export default function ApplicationsPage() {
   };
 
   const handleStatusChange = async (id, newStatus) => {
-    try {
-      const app = applications.find(a => a.application_id === id);
-      
-      const res = await fetch(`/api/applications/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...app,
-          application_status: newStatus
-        })
-      });
+  try {
+    const res = await fetch(`/api/applications/${id}`, {
+      method: 'PATCH',  // Changed from PUT to PATCH
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        application_status: newStatus
+      })
+    });
 
-      if (!res.ok) throw new Error('Failed to update');
-
-      setSuccessMessage('Status updated successfully!');
-      fetchApplications();
-      setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (err) {
-      setError('Failed to update status');
-      setTimeout(() => setError(''), 3000);
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to update');
     }
-  };
+
+    setSuccessMessage('Status updated successfully!');
+    fetchApplications();
+    setTimeout(() => setSuccessMessage(''), 3000);
+  } catch (err) {
+    setError(err.message || 'Failed to update status');
+    setTimeout(() => setError(''), 3000);
+  }
+};
 
   const getStatusColor = (status) => {
     const colors = {

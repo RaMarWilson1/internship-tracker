@@ -215,7 +215,7 @@ export default function EmailPage() {
           <div className="bg-white rounded-xl shadow-md p-8 border border-gray-200 text-center">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Gmail Connected! ✓</h3>
             <p className="text-gray-600 mb-6">
-              Now let's scan your recent emails for application confirmations
+              Now lets scan your recent emails for application confirmations
             </p>
             
             <button

@@ -9,7 +9,6 @@ import { cookies } from 'next/headers';
 
 export async function POST(request) {
   try {
-    // Get token from cookie (set by callback) - await in Next.js 15
     const cookieStore = await cookies();
     const accessToken = cookieStore.get('gmail_token')?.value;
 
@@ -20,7 +19,6 @@ export async function POST(request) {
       );
     }
 
-    // Set up OAuth2 client with the token
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
@@ -31,16 +29,15 @@ export async function POST(request) {
       access_token: accessToken
     });
 
-    // Initialize Gmail API
     const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-    // Search for application-related emails
-    const query = 'subject:(application OR applied OR "thank you for applying") newer_than:6m';
+    // Broader search query to catch more applications
+    const query = 'subject:(application OR applied OR "thank you for applying" OR "application received" OR "application submitted" OR position OR job OR internship OR career OR hiring) newer_than:12m';
     
     const response = await gmail.users.messages.list({
       userId: 'me',
       q: query,
-      maxResults: 20
+      maxResults: 50 // Increased from 20
     });
 
     const messages = response.data.messages || [];
@@ -48,14 +45,14 @@ export async function POST(request) {
     if (messages.length === 0) {
       return NextResponse.json({
         applications: [],
-        message: 'No application emails found in the last 6 months'
+        message: 'No application emails found in the last 12 months'
       });
     }
 
-    // Fetch and parse each message
     const applications = [];
     
-    for (const message of messages.slice(0, 10)) { // Limit to 10 for performance
+    // Process more emails - increased from 10 to 30
+    for (const message of messages.slice(0, 30)) {
       try {
         const msg = await gmail.users.messages.get({
           userId: 'me',
@@ -68,18 +65,25 @@ export async function POST(request) {
         const from = headers.find(h => h.name === 'From')?.value || '';
         const date = headers.find(h => h.name === 'Date')?.value || '';
 
-        // Extract body
+        // Extract body with better handling
         let body = '';
-        if (msg.data.payload.body.data) {
+        if (msg.data.payload.body?.data) {
           body = Buffer.from(msg.data.payload.body.data, 'base64').toString('utf-8');
         } else if (msg.data.payload.parts) {
-          const textPart = msg.data.payload.parts.find(part => part.mimeType === 'text/plain');
-          if (textPart && textPart.body.data) {
-            body = Buffer.from(textPart.body.data, 'base64').toString('utf-8');
+          for (const part of msg.data.payload.parts) {
+            if (part.mimeType === 'text/plain' && part.body?.data) {
+              body += Buffer.from(part.body.data, 'base64').toString('utf-8');
+            } else if (part.parts) {
+              // Handle nested parts
+              for (const subpart of part.parts) {
+                if (subpart.mimeType === 'text/plain' && subpart.body?.data) {
+                  body += Buffer.from(subpart.body.data, 'base64').toString('utf-8');
+                }
+              }
+            }
           }
         }
 
-        // Parse application data from email
         const parsed = parseApplicationEmail(subject, body, from, date);
         
         if (parsed) {
@@ -87,7 +91,6 @@ export async function POST(request) {
         }
       } catch (err) {
         console.error('Error parsing message:', err);
-        // Continue with next message
       }
     }
 
@@ -99,7 +102,6 @@ export async function POST(request) {
   } catch (error) {
     console.error('Gmail parse error:', error);
     
-    // Handle specific error cases
     if (error.code === 401) {
       return NextResponse.json(
         { error: 'Gmail authentication expired. Please reconnect.' },
@@ -114,44 +116,75 @@ export async function POST(request) {
   }
 }
 
-// Helper function to parse application data from email
 function parseApplicationEmail(subject, body, from, dateString) {
   try {
-    // Extract company name from sender or subject
     let companyName = '';
     
-    // Try to extract from sender email
-    const fromMatch = from.match(/[@\s]([A-Za-z0-9]+)\.[com|org|net]/i);
-    if (fromMatch) {
-      companyName = fromMatch[1].charAt(0).toUpperCase() + fromMatch[1].slice(1);
+    // Enhanced company extraction
+    // 1. Try common email patterns
+    const emailDomainMatch = from.match(/@([a-z0-9-]+)\.(com|org|io|net)/i);
+    if (emailDomainMatch) {
+      const domain = emailDomainMatch[1];
+      // Capitalize and clean up
+      companyName = domain
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
     }
     
-    // Or from subject line
-    if (!companyName) {
-      const subjectMatch = subject.match(/(?:from|at|with|@)\s+([A-Z][A-Za-z\s]+?)(?:\s+[-–—]|\s+for|\s+application|$)/);
-      if (subjectMatch) {
-        companyName = subjectMatch[1].trim();
+    // 2. Look for company name in subject
+    const subjectCompanyPatterns = [
+      /(?:at|@|from)\s+([A-Z][A-Za-z0-9\s&.]+?)(?:\s+[-–—]|\s+for|\s+application|\s+team|$)/,
+      /([A-Z][A-Za-z0-9\s&.]+?)\s+(?:application|team|careers|hiring|jobs)/i,
+      /Thank you for (?:your )?(?:application|applying) (?:to|at) ([A-Z][A-Za-z0-9\s&.]+)/i
+    ];
+    
+    for (const pattern of subjectCompanyPatterns) {
+      const match = subject.match(pattern);
+      if (match && match[1].length > 2) {
+        companyName = match[1].trim();
+        break;
       }
     }
 
-    // Fallback to a generic extraction
-    if (!companyName) {
-      companyName = from.split('@')[0].split('<')[0].trim() || 'Unknown Company';
+    // 3. Look in email body
+    if (!companyName || companyName.length < 3) {
+      const bodyCompanyPatterns = [
+        /(?:team at|working at|join|careers at)\s+([A-Z][A-Za-z0-9\s&.]+)/,
+        /([A-Z][A-Za-z0-9\s&.]+?)\s+(?:is excited|is pleased|team)/
+      ];
+      
+      for (const pattern of bodyCompanyPatterns) {
+        const match = body.match(pattern);
+        if (match && match[1].length > 2) {
+          companyName = match[1].trim();
+          break;
+        }
+      }
     }
 
-    // Extract position title from subject or body
+    // Clean up company name
+    if (companyName) {
+      companyName = companyName
+        .replace(/\s+(inc|llc|ltd|corporation|corp)\.?$/i, '')
+        .trim();
+    } else {
+      companyName = 'Unknown Company';
+    }
+
+    // Enhanced position extraction
     let positionTitle = 'Position Not Specified';
     
-    // Common patterns in subject lines
     const titlePatterns = [
-      /(?:for|as|position:|role:)\s+([A-Z][A-Za-z\s]+?)(?:\s+at|\s+application|\s+[-–—]|$)/i,
-      /([A-Z][A-Za-z\s]+?)\s+(?:position|role|internship|job)/i,
-      /(Software Engineer|Data Scientist|Product Manager|Developer|Analyst|Intern)/i
+      /(?:for the|for our|for a)\s+([A-Z][A-Za-z\s-]+?)\s+(?:position|role|opening)/i,
+      /(?:position:|role:|as a|as an)\s+([A-Z][A-Za-z\s-]+?)(?:\s+at|\s+application|\s+[-–—]|$)/i,
+      /([A-Z][A-Za-z\s-]+?)\s+(?:Internship|Intern\b)/i,
+      /(Software Engineer|Data Scientist|Product Manager|Full Stack Developer|Frontend Developer|Backend Developer|DevOps Engineer|Data Analyst|Business Analyst|Marketing|Sales)/i
     ];
 
     for (const pattern of titlePatterns) {
-      const match = subject.match(pattern);
-      if (match) {
+      const match = subject.match(pattern) || body.match(pattern);
+      if (match && match[1]) {
         positionTitle = match[1].trim();
         break;
       }
@@ -160,25 +193,32 @@ function parseApplicationEmail(subject, body, from, dateString) {
     // Parse date
     const applicationDate = new Date(dateString).toISOString().split('T')[0];
 
-    // Determine status
+    // Determine status with better detection
     let status = 'Applied';
-    const lowerSubject = subject.toLowerCase();
-    const lowerBody = body.toLowerCase();
+    const lowerText = (subject + ' ' + body).toLowerCase();
     
-    if (lowerSubject.includes('interview') || lowerBody.includes('interview')) {
-      status = 'Interview';
-    } else if (lowerSubject.includes('offer') || lowerBody.includes('offer')) {
+    if (lowerText.includes('offer') || lowerText.includes('congratulations')) {
       status = 'Offer';
-    } else if (lowerSubject.includes('reject') || lowerBody.includes('unfortunately')) {
+    } else if (lowerText.includes('interview') || lowerText.includes('schedule a call')) {
+      status = 'Interview';
+    } else if (lowerText.includes('reject') || lowerText.includes('unfortunately') || lowerText.includes('not moving forward')) {
       status = 'Rejected';
     }
 
+    // Extract location if possible
+    let location = '';
+    const locationMatch = body.match(/(?:location|based in|office in)\s*:?\s*([A-Z][a-z]+(?:,?\s+[A-Z]{2})?)/);
+    if (locationMatch) {
+      location = locationMatch[1];
+    }
+
     return {
-      companyName,
-      positionTitle,
+      companyName: companyName.substring(0, 100),
+      positionTitle: positionTitle.substring(0, 100),
       applicationDate,
       status,
-      notes: `Imported from email: ${subject.substring(0, 100)}`
+      location,
+      notes: `Imported from email: "${subject.substring(0, 80)}"`
     };
   } catch (error) {
     console.error('Error in parseApplicationEmail:', error);

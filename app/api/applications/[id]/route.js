@@ -1,12 +1,12 @@
 //*** RaMar Wilson
 //*** Database Systems - Final Project
 //*** December 2, 2024
-//*** Single Application API - GET, PUT, DELETE by ID
+//*** Applications API - Individual application operations
 
-import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import { NextResponse } from 'next/server';
 
-// GET single application by ID
+// GET single application
 export async function GET(request, { params }) {
   try {
     const { id } = params;
@@ -15,14 +15,14 @@ export async function GET(request, { params }) {
       'SELECT * FROM Applications WHERE application_id = ?',
       [id]
     );
-    
+
     if (rows.length === 0) {
       return NextResponse.json(
         { error: 'Application not found' },
         { status: 404 }
       );
     }
-    
+
     return NextResponse.json(rows[0]);
   } catch (error) {
     console.error('Database error:', error);
@@ -33,60 +33,42 @@ export async function GET(request, { params }) {
   }
 }
 
-// PUT update application by ID
+// UPDATE application
 export async function PUT(request, { params }) {
   try {
     const { id } = params;
     const body = await request.json();
-    const {
-      company_name,
-      position_title,
-      job_description,
-      location,
-      salary_range,
-      application_status,
-      application_date,
-      job_url,
-      notes
-    } = body;
-    
+
     const [result] = await pool.query(
-      `UPDATE Applications SET 
-       company_name = ?, 
-       position_title = ?, 
-       job_description = ?,
-       location = ?,
-       salary_range = ?,
-       application_status = ?,
-       application_date = ?,
-       job_url = ?,
-       notes = ?
+      `UPDATE Applications 
+       SET company_name = ?, 
+           position_title = ?, 
+           application_status = ?,
+           location = ?,
+           salary_range = ?,
+           job_url = ?,
+           notes = ?
        WHERE application_id = ?`,
       [
-        company_name,
-        position_title,
-        job_description,
-        location,
-        salary_range,
-        application_status,
-        application_date,
-        job_url,
-        notes,
+        body.company_name,
+        body.position_title,
+        body.application_status,
+        body.location,
+        body.salary_range,
+        body.job_url,
+        body.notes,
         id
       ]
     );
-    
+
     if (result.affectedRows === 0) {
       return NextResponse.json(
         { error: 'Application not found' },
         { status: 404 }
       );
     }
-    
-    return NextResponse.json({ 
-      message: 'Application updated successfully' 
-    });
-    
+
+    return NextResponse.json({ message: 'Application updated successfully' });
   } catch (error) {
     console.error('Database error:', error);
     return NextResponse.json(
@@ -96,27 +78,24 @@ export async function PUT(request, { params }) {
   }
 }
 
-// DELETE application by ID
+// DELETE application
 export async function DELETE(request, { params }) {
   try {
     const { id } = params;
-    
+
     const [result] = await pool.query(
       'DELETE FROM Applications WHERE application_id = ?',
       [id]
     );
-    
+
     if (result.affectedRows === 0) {
       return NextResponse.json(
         { error: 'Application not found' },
         { status: 404 }
       );
     }
-    
-    return NextResponse.json({ 
-      message: 'Application deleted successfully' 
-    });
-    
+
+    return NextResponse.json({ message: 'Application deleted successfully' });
   } catch (error) {
     console.error('Database error:', error);
     return NextResponse.json(

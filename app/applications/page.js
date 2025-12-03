@@ -1,7 +1,7 @@
 //*** RaMar Wilson
 //*** Database Systems - Final Project
 //*** December 2, 2024
-//*** Applications Page - Full list with add, edit, delete, search, filter
+//*** Applications Page - Full list with edit, delete, status change
 
 'use client';
 
@@ -14,6 +14,8 @@ export default function ApplicationsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchApplications();
@@ -30,7 +32,7 @@ export default function ApplicationsPage() {
       const data = await res.json();
       setApplications(data);
     } catch (err) {
-      console.error('Failed to fetch applications');
+      setError('Failed to fetch applications');
     } finally {
       setLoading(false);
     }
@@ -53,6 +55,49 @@ export default function ApplicationsPage() {
     setFilteredApps(filtered);
   };
 
+  const handleDelete = async (id) => {
+    if (!confirm('Are you sure you want to delete this application?')) return;
+
+    try {
+      const res = await fetch(`/api/applications/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (!res.ok) throw new Error('Failed to delete');
+
+      setSuccessMessage('Application deleted successfully!');
+      fetchApplications();
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      setError('Failed to delete application');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      const app = applications.find(a => a.application_id === id);
+      
+      const res = await fetch(`/api/applications/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...app,
+          application_status: newStatus
+        })
+      });
+
+      if (!res.ok) throw new Error('Failed to update');
+
+      setSuccessMessage('Status updated successfully!');
+      fetchApplications();
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      setError('Failed to update status');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
   const getStatusColor = (status) => {
     const colors = {
       'Applied': 'bg-blue-100 text-blue-800',
@@ -67,19 +112,24 @@ export default function ApplicationsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">Applications</h1>
-            <Link href="/" className="text-blue-600 hover:text-blue-700">
-              ← Back to Dashboard
-            </Link>
-          </div>
-        </div>
-      </header>
-
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">Applications</h1>
+          <p className="text-gray-600 mt-1">Manage your internship applications</p>
+        </div>
+
+        {successMessage && (
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
+            ✓ {successMessage}
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+            ✗ {error}
+          </div>
+        )}
+
         <div className="bg-white rounded-xl shadow-md p-6 mb-6 border border-gray-200">
           <div className="flex gap-4">
             <input
@@ -127,34 +177,54 @@ export default function ApplicationsPage() {
               </Link>
             </div>
           ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="border-b-2 border-gray-200">
-                  <th className="text-left p-4 font-semibold">Company</th>
-                  <th className="text-left p-4 font-semibold">Position</th>
-                  <th className="text-left p-4 font-semibold">Location</th>
-                  <th className="text-left p-4 font-semibold">Applied</th>
-                  <th className="text-left p-4 font-semibold">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredApps.map(app => (
-                  <tr key={app.application_id} className="border-b hover:bg-gray-50">
-                    <td className="p-4 font-medium">{app.company_name}</td>
-                    <td className="p-4">{app.position_title}</td>
-                    <td className="p-4">{app.location || 'N/A'}</td>
-                    <td className="p-4">
-                      {new Date(app.application_date).toLocaleDateString()}
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(app.application_status)}`}>
-                        {app.application_status}
-                      </span>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b-2 border-gray-200">
+                    <th className="text-left p-4 font-semibold">Company</th>
+                    <th className="text-left p-4 font-semibold">Position</th>
+                    <th className="text-left p-4 font-semibold">Location</th>
+                    <th className="text-left p-4 font-semibold">Applied</th>
+                    <th className="text-left p-4 font-semibold">Status</th>
+                    <th className="text-left p-4 font-semibold">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredApps.map(app => (
+                    <tr key={app.application_id} className="border-b hover:bg-gray-50">
+                      <td className="p-4 font-medium">{app.company_name}</td>
+                      <td className="p-4">{app.position_title}</td>
+                      <td className="p-4">{app.location || 'N/A'}</td>
+                      <td className="p-4">
+                        {new Date(app.application_date).toLocaleDateString()}
+                      </td>
+                      <td className="p-4">
+                        <select
+                          value={app.application_status}
+                          onChange={(e) => handleStatusChange(app.application_id, e.target.value)}
+                          className={`px-3 py-1 rounded-full text-sm font-medium border-0 cursor-pointer ${getStatusColor(app.application_status)}`}
+                        >
+                          <option value="Applied">Applied</option>
+                          <option value="Interview">Interview</option>
+                          <option value="Offer">Offer</option>
+                          <option value="Accepted">Accepted</option>
+                          <option value="Rejected">Rejected</option>
+                          <option value="Withdrawn">Withdrawn</option>
+                        </select>
+                      </td>
+                      <td className="p-4">
+                        <button
+                          onClick={() => handleDelete(app.application_id)}
+                          className="text-red-600 hover:text-red-700 font-medium text-sm"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </main>

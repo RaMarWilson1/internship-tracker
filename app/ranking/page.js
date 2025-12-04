@@ -23,7 +23,7 @@ export default function RankingPage() {
           <div className="space-y-2 mb-8 text-gray-700">
             <p><strong>Course:</strong> Database Systems - Final Project</p>
             <p><strong>Project:</strong> Internship Application Tracker</p>
-            <p><strong>Date:</strong> December 4, 2024</p>
+            <p><strong>Date:</strong> December 4, 2025</p>
             <p><strong>Live Application:</strong> <a href="https://internship-tracker-two.vercel.app" className="text-blue-600 hover:underline">https://internship-tracker-two.vercel.app</a></p>
           </div>
 

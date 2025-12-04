@@ -114,8 +114,8 @@ export default function ApplicationsPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Applications</h1>
-          <p className="text-gray-600 mt-1">Manage your internship applications</p>
+          <h1 className="text-3xl font-bold text-black-900">Applications</h1>
+          <p className="text-black-600 mt-1">Manage your internship applications</p>
         </div>
 
         {successMessage && (

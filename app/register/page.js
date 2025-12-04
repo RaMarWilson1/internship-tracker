@@ -67,7 +67,7 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-black-900 mb-2">
             Create Account
           </h1>
           <p className="text-gray-600">Sign up to start tracking applications</p>
@@ -84,7 +84,7 @@ export default function RegisterPage() {
 
             {/* First Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-black-700 mb-2">
                 First Name
               </label>
               <input
@@ -101,7 +101,7 @@ export default function RegisterPage() {
 
             {/* Last Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-black-700 mb-2">
                 Last Name
               </label>
               <input
@@ -119,7 +119,7 @@ export default function RegisterPage() {
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-black-700 mb-2">
               Email
             </label>
             <input
@@ -136,7 +136,7 @@ export default function RegisterPage() {
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-black-700 mb-2">
               Password
             </label>
             <input
@@ -153,7 +153,7 @@ export default function RegisterPage() {
 
           {/* Confirm Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-black-700 mb-2">
               Confirm Password
             </label>
             <input

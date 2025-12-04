@@ -71,7 +71,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+              <h1 className="text-3xl font-bold text-black-900">Dashboard</h1>
               <p className="text-gray-600 mt-1">
                 Track your internship applications
               </p>
@@ -99,7 +99,7 @@ export default function HomePage() {
               <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-600 text-sm">Total Applications</p>
+                    <p className="text-black-600 text-sm">Total Applications</p>
                     <p className="text-3xl font-bold text-gray-900 mt-2">
                       {stats.total}
                     </p>
@@ -152,7 +152,7 @@ export default function HomePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-gray-600 text-sm">Interviews</p>
-                    <p className="text-3xl font-bold text-gray-900 mt-2">
+                    <p className="text-3xl font-bold text-black-900 mt-2">
                       {stats.interviews}
                     </p>
                   </div>
@@ -178,7 +178,7 @@ export default function HomePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-gray-600 text-sm">Offers</p>
-                    <p className="text-3xl font-bold text-gray-900 mt-2">
+                    <p className="text-3xl font-bold text-black-900 mt-2">
                       {stats.offers}
                     </p>
                   </div>
@@ -204,7 +204,7 @@ export default function HomePage() {
             {/* Recent Applications */}
             <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-semibold text-gray-900">
+                <h2 className="text-2xl font-semibold text-black-900">
                   Recent Applications
                 </h2>
                 <Link
@@ -218,7 +218,7 @@ export default function HomePage() {
               {applications.length === 0 ? (
                 <div className="text-center py-12">
                   <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
+                    className="mx-auto h-12 w-12 text-black-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -230,7 +230,7 @@ export default function HomePage() {
                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
-                  <h3 className="mt-4 text-lg font-medium text-gray-900">
+                  <h3 className="mt-4 text-lg font-medium text-black-900">
                     No applications yet
                   </h3>
                   <p className="mt-2 text-gray-600">
@@ -248,19 +248,19 @@ export default function HomePage() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b-2 border-gray-200">
-                        <th className="text-left p-4 font-semibold text-gray-700">
+                        <th className="text-left p-4 font-semibold text-black-700">
                           Company
                         </th>
-                        <th className="text-left p-4 font-semibold text-gray-700">
+                        <th className="text-left p-4 font-semibold text-black-700">
                           Position
                         </th>
-                        <th className="text-left p-4 font-semibold text-gray-700">
+                        <th className="text-left p-4 font-semibold text-black-700">
                           Location
                         </th>
-                        <th className="text-left p-4 font-semibold text-gray-700">
+                        <th className="text-left p-4 font-semibold text-black-700">
                           Applied
                         </th>
-                        <th className="text-left p-4 font-semibold text-gray-700">
+                        <th className="text-left p-4 font-semibold text-black-700">
                           Status
                         </th>
                       </tr>
@@ -271,16 +271,16 @@ export default function HomePage() {
                           key={app.application_id}
                           className="border-b border-gray-100 hover:bg-gray-50"
                         >
-                          <td className="p-4 font-medium text-gray-900">
+                          <td className="p-4 font-medium text-black-900">
                             {app.company_name}
                           </td>
-                          <td className="p-4 text-gray-700">
+                          <td className="p-4 text-black-700">
                             {app.position_title}
                           </td>
-                          <td className="p-4 text-gray-600">
+                          <td className="p-4 text-black-600">
                             {app.location || 'N/A'}
                           </td>
-                          <td className="p-4 text-gray-600">
+                          <td className="p-4 text-black-600">
                             {new Date(app.application_date).toLocaleDateString(
                               'en-US',
                               {

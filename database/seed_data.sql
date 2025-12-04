@@ -1,7 +1,7 @@
 -- Additional Sample Data for Internship Tracker
 -- Issue #2: Add 5 more applications and 3 more interviews
 -- Created by: Ihor (Database Lead)
--- Date: December 2, 2024
+-- Date: December 2, 2025
 
 USE internship_tracker;
 

@@ -1,6 +1,6 @@
 //*** RaMar Wilson
 //*** Database Systems - Final Project
-//*** December 2, 2024
+//*** December 2, 2025
 //*** NextAuth configuration for user authentication
 
 import NextAuth from "next-auth";

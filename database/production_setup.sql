@@ -1,7 +1,7 @@
 -- Production Database Setup for Internship Tracker
 -- Google Cloud SQL Ready
 -- Created by: Ihor (Database Lead)
--- Date: December 2, 2024
+-- Date: December 2, 2025
 -- Version: 1.0
 
 -- Create database (for initial setup only)

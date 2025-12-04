@@ -3,7 +3,7 @@
 **Database Lead:** Ihor  
 **Database Name:** `internship_tracker`  
 **DBMS:** MySQL 9.3.0  
-**Created:** December 1, 2024
+**Created:** December 1, 2025
 
 ---
 

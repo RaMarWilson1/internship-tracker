@@ -1,6 +1,6 @@
 //*** RaMar Wilson
 //*** Database Systems - Final Project
-//*** December 2, 2024
+//*** December 2, 2025
 //*** Applications API - Individual application operations (GET, PUT, DELETE)
 
 import pool from '@/lib/db';

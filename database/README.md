@@ -1,7 +1,7 @@
 # Internship Tracker Database Documentation
 
 **Database Lead:** Ihor  
-**Last Updated:** December 2, 2024  
+**Last Updated:** December 2, 2025 
 **Database Name:** `internship_tracker`  
 **MySQL Version:** 9.3.0
 

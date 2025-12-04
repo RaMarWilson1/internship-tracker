@@ -1,6 +1,6 @@
 //*** RaMar Wilson
 //*** Database Systems - Final Project
-//*** December 2, 2024
+//*** December 2, 2025
 //*** Applications API Route - GET all and POST new application
 
 import { NextResponse } from 'next/server';

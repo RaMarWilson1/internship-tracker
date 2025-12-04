@@ -1,6 +1,6 @@
 -- Internship Tracker Database Schema
 -- Created by: Ihor (Database Lead)
--- Date: December 1, 2024
+-- Date: December 1, 2025
 
 -- Create database
 CREATE DATABASE IF NOT EXISTS internship_tracker;
